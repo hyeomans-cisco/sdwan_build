@@ -4,8 +4,7 @@ variable "aws_secret_key" {}
 
 # provider
 provider "aws" {
-    access_key = "access_key"
-    secret_key = "secret_key"
+    shared_credentials_file = "~/.aws/crednetials"
     region = "us-east-1"
 }
 
