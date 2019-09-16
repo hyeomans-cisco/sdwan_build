@@ -13,8 +13,12 @@ variable "network_address_space" {
 variable "subnet1_address_space" {
     default = "10.1.1.0/24"
 }
-variable " subnet2_address_space" {
+variable "subnet2_address_space" {
     default = "10.1.2.0/24"
+}
+
+variable "vpc_cidr_block" {
+    default = "10.1.0.0/16"
 }
 
 variable "aws_vpc_id" {
@@ -32,7 +36,7 @@ provider "aws" {
 
 # resource
 resource "aws_vpc" "sdwan_lab" {
-    cidr_block = "10.1.0.0/16"
+    cidr_block = "${var.vpc_cidr_block}"
 
     tags = {
         Name = "SDWAN_LAB"
