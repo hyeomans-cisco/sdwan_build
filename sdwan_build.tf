@@ -50,7 +50,61 @@ resource "aws_vpc" "sdwan_lab" {
 }
 resource "aws_instance" "vEdge" {
     ami           = "ami-0dc32351148728c30"
+    instance_type = "c5.xlarge"
+    key_name = "${var.key_name}" # key that you're going to use to ssh into the instance using that keypair
+    vpc_id = "${aws_vpc.sdwan_lab}"
+
+  connection {
+    user        = "admin"
+    private_key = "${file(var.private_key_path)}"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+        "enter scriopt or commands here"
+    ]
+  }
+}
+
+resource "aws_instance" "vBond" {
+    ami           = "ami-0dc32351148728c30"
     instance_type = "t2.medium"
+    key_name = "${var.key_name}" # key that you're going to use to ssh into the instance using that keypair
+    vpc_id = "${aws_vpc.sdwan_lab}"
+
+  connection {
+    user        = "admin"
+    private_key = "${file(var.private_key_path)}"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+        "enter scriopt or commands here"
+    ]
+  }
+}
+
+resource "aws_instance" "vSmart" {
+    ami           = "ami-0dc32351148728c30"
+    instance_type = "t2.medium"
+    key_name = "${var.key_name}" # key that you're going to use to ssh into the instance using that keypair
+    vpc_id = "${aws_vpc.sdwan_lab}"
+
+  connection {
+    user        = "admin"
+    private_key = "${file(var.private_key_path)}"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+        "enter scriopt or commands here"
+    ]
+  }
+}
+
+resource "aws_instance" "vManage" {
+    ami           = "ami-0dc32351148728c30"
+    instance_type = "t2.xlarge"
     key_name = "${var.key_name}" # key that you're going to use to ssh into the instance using that keypair
     vpc_id = "${aws_vpc.sdwan_lab}"
 
