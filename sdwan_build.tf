@@ -34,9 +34,15 @@ provider "aws" {
     region = "us-east-1"
 }
 
+# data
+
+data "aws_availability_zones" "available" {}
+
 # resource
 resource "aws_vpc" "sdwan_lab" {
     cidr_block = "${var.vpc_cidr_block}"
+    map_public_ip_on_launch = "true"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
     tags = {
         Name = "SDWAN_LAB"
