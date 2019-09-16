@@ -7,14 +7,17 @@ variable "private_key_path" {
 variable "key_name" {
     default = "hfy-macpro"
 }
-variable "network_address_space" {
+variable "vpn_0_isp_1" {
     default = "10.1.0.0/16"
 }
-variable "subnet1_address_space" {
-    default = "10.1.1.0/24"
+variable "vpn_0_isp_2" {
+    default = "10.1.1.0/16"
 }
-variable "subnet2_address_space" {
+variable "vpn_512" {
     default = "10.1.2.0/24"
+}
+variable "vpn_1" {
+    default = "10.1.3.0/24"
 }
 
 variable "vpc_cidr_block" {
