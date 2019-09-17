@@ -219,3 +219,4 @@ resource "aws_instance" "vEdge" {
 #      device_index = 2
 #  }
 # }
+}
