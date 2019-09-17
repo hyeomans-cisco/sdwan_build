@@ -121,21 +121,21 @@ resource "aws_security_group" "sdwan-cisco-ips-sg" {
     ingress {
         from_port = 8443
         to_port = 8443
-        protocol = tcp
+        protocol = "tcp"
         cidr_blocks = ["173.36.0.0/14"]
     }
 
     ingress {
         from_port = 22
         to_port = 22
-        protocol = tcp
+        protocol = "tcp"
         cidr_blocks = ["173.36.0.0/14"]
     }
 
     ingress {
         from_port = 443
         to_port = 443
-        protocol = https
+        protocol = "https"
         cidr_blocks = ["173.36.0.0/14"]
     }
     egress {
