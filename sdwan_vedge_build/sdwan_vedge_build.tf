@@ -58,25 +58,25 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_subnet" "vpn_0_isp_1" {
     cidr_block = "${var.vpn_0_isp_1}"
     vpc_id = "${aws_vpc.sdwan_lab.id}"
-    availability_zone = "${data.aws_availability_zones.available.names[0]}"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
 }
 
 resource "aws_subnet" "vpn_0_isp_2" {
     cidr_block = "${var.vpn_0_isp_2}"
     vpc_id = "${aws_vpc.sdwan_lab.id}"
-    availability_zone = "${data.aws_availability_zones.available.names[0]}"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
 }
 
 resource "aws_subnet" "vpn_512" {
     cidr_block = "${var.vpn_512}"
     vpc_id = "${aws_vpc.sdwan_lab.id}"
-    availability_zone = "${data.aws_availability_zones.available.names[0]}"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
 }
 
 resource "aws_subnet" "vpn_1" {
     cidr_block = "${ var.vpn_1}"
     vpc_id = "${aws_vpc.sdwan_lab.id}"
-    availability_zone = "${data.aws_availability_zones.available.names[0]}"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
 }
 
 resource "aws_route_table" "rtb" {
@@ -189,9 +189,9 @@ resource "aws_instance" "vEdge" {
     key_name = "${var.key_name}" 
     vpc_security_group_ids = ["${aws_security_group.sdwan-cisco-ips-sg.id}"]
 
-  connection {
-    user        = "admin"
-    private_key = "${file(var.private_key_path)}"
+    connection {
+      user        = "admin"
+      private_key = "${file(var.private_key_path)}"
   }
 
  # provisioner "remote-exec" {
