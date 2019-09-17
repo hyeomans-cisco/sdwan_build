@@ -151,7 +151,7 @@ resource "aws_security_group" "sdwan-cisco-ips-sg" {
 }
 ##### interfaces #####
 
-resource "network_interface" "vpn0_isp1_int" {
+resource "aws_network_interface" "vpn0_isp1_int" {
     subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
 
     tags {
