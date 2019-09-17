@@ -157,12 +157,14 @@ resource "network_interface" "vpn0_isp1_int" {
     tags {
         Name = "vpn0_isp_1_interface"
     }
+}
 resource "network_interface" "vpn0_isp2_int" {
     subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
 
     tags {
         Name = "vpn0_isp_2_interface"
     }
+}
 
 resource "network_interface" "vpn512_int" {
     subnet_id = "${aws_subnet.vpn_512.id}"
@@ -170,6 +172,7 @@ resource "network_interface" "vpn512_int" {
     tags {
         Name = "vpn512_interface"
     }
+}
 
 resource "network_interface" "vpn1_int" {
     subnet_id = "${aws_subnet.vpn_1.id}"
@@ -181,7 +184,7 @@ resource "network_interface" "vpn1_int" {
 resource "aws_instance" "vEdge" {
     ami           = "aami-0fb321d472a665c9b"
     instance_type = "c5.xlarge"
-    key_name = "${var.key_name}" # key that you're going to use to ssh into the instance using that keypair
+    key_name = "${var.key_name}" 
     vpc_id = "${aws_vpc.vpc.id}"
     vpc_security_group_ids = ["${aws_security_group.sdwan-cisco-ips-sg.id}"]
 
