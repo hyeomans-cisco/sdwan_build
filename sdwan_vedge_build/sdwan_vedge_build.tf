@@ -1,6 +1,6 @@
 ################# variables ############################################
-variable "aws_access_key" {}
-variable "aws_secret_key" {}
+# variable "aws_access_key" {}
+# variable "aws_secret_key" {}
 variable "private_key_path" {
     default = "$HOME/.ssh/"
 }
@@ -30,9 +30,7 @@ variable "aws_vpc_id" {
 
 ################# provider ############################################
 provider "aws" {
-    # access_key = "${var.aws_access_key}"
-    # secret_key = "${var.aws_secret_key}"
-    shared_credentials_file = "~/.aws/credentials"
+    shared_credentials_file = "$HOME/.aws/credentials"
     region = "us-east-1"
 }
 
@@ -51,7 +49,7 @@ resource "aws_vpc" "sdwan_lab" {
 }
 
 resource "aws_internet_gateway" "igw" {
-    vpc_id = "${aws_vpc.vpc.id}"
+    vpc_id = "${aws_vpc.sdwan_lab.id}"
 
     tags = {
         Name = "${var.aws_vpc_id}-igw"
@@ -59,56 +57,60 @@ resource "aws_internet_gateway" "igw" {
 }
 resource "aws_subnet" "vpn_0_isp_1" {
     cidr_block = "${var.vpn_0_isp_1}"
-    vpc_id = "${aws_vpc.vpc.id}"
+    vpc_id = "${aws_vpc.sdwan_lab.id}"
     availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "vpn_0_isp_2" {
     cidr_block = "${var.vpn_0_isp_2}"
-    vpc_id = "${aws_vpc.vpc.id}"
+    vpc_id = "${aws_vpc.sdwan_lab.id}"
     availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "vpn_512" {
     cidr_block = "${var.vpn_512}"
-    vpc_id = "${aws_vpc.vpc.id}"
+    vpc_id = "${aws_vpc.sdwan_lab.id}"
     availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "vpn_1" {
     cidr_block = "${ var.vpn_1}"
-    vpc_id = "${aws_vpc.vpc.id}"
+    vpc_id = "${aws_vpc.sdwan_lab.id}"
     availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_route_table" "rtb" {
-    vpc_id = "${aws_vpc.vpc.id}"
+    vpc_id = "${aws_vpc.sdwan_lab.id}"
 
     route {
         cidr_block = "0.0.0.0/0"
         gateway_id = "${aws_internet_gateway.igw.id}"
     }
 
-    tags {
+    tags = {
         Name = "${var.aws_vpc_id}-rtb"
     }
 }
 
 ##### routing #####
 resource "aws_route_table_association" "rta-vpn0-isp1" {
-    subnet_id = "${aws_subnet.vpn_0_isp_1}"
+    subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
+    route_table_id = "${aws_route_table.rtb.id}"
 }
 resource "aws_route_table_association" "rta-vpn0-isp2" {
-    subnet_id = "${aws_subnet.vpn_0_isp_2}"
+    subnet_id = "${aws_subnet.vpn_0_isp_2.id}"
+    route_table_id = "${aws_route_table.rtb.id}"
   
 }
 
 resource "aws_route_table_association" "rta-vpn512" {
     subnet_id = "${var.vpn_512}"
+    route_table_id = "${aws_route_table.rtb.id}"
 }
 
 resource "aws_route_table_association" "rta-vpn1" {
     subnet_id = "${var.vpn_1}"
+    route_table_id = "${aws_route_table.rtb.id}"
   
 }
 
@@ -116,7 +118,7 @@ resource "aws_route_table_association" "rta-vpn1" {
 
 resource "aws_security_group" "sdwan-cisco-ips-sg" {
     name = "sdwan_lab_sg"
-    vpc_id = "${aws_vpc.vpc.id}"
+    vpc_id = "${aws_vpc.sdwan_lab.id}"
 
     ingress {
         from_port = 8443
@@ -145,8 +147,8 @@ resource "aws_security_group" "sdwan-cisco-ips-sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
-    tags {
-        Name = "${var.aws_vpc}-sg"
+    tags = {
+        Name = "${var.aws_vpc_id}-sg"
     }
 }
 ##### interfaces #####
@@ -154,38 +156,37 @@ resource "aws_security_group" "sdwan-cisco-ips-sg" {
 resource "aws_network_interface" "vpn0_isp1_int" {
     subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
 
-    tags {
+    tags = {
         Name = "vpn0_isp_1_interface"
     }
 }
-resource "network_interface" "vpn0_isp2_int" {
+resource "aws_network_interface" "vpn0_isp2_int" {
     subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
 
-    tags {
+    tags = {
         Name = "vpn0_isp_2_interface"
     }
 }
 
-resource "network_interface" "vpn512_int" {
+resource "aws_network_interface" "vpn512_int" {
     subnet_id = "${aws_subnet.vpn_512.id}"
 
-    tags {
+    tags = {
         Name = "vpn512_interface"
     }
 }
 
-resource "network_interface" "vpn1_int" {
+resource "aws_network_interface" "vpn1_int" {
     subnet_id = "${aws_subnet.vpn_1.id}"
 
-    tags {
+    tags = {
         Name = "vpn1_interface"
     }
 }
 resource "aws_instance" "vEdge" {
-    ami           = "aami-0fb321d472a665c9b"
+    ami           = "ami-0fb321d472a665c9b"
     instance_type = "c5.xlarge"
     key_name = "${var.key_name}" 
-    vpc_id = "${aws_vpc.vpc.id}"
     vpc_security_group_ids = ["${aws_security_group.sdwan-cisco-ips-sg.id}"]
 
   connection {
@@ -200,23 +201,23 @@ resource "aws_instance" "vEdge" {
  #  }
  # }
 
- # network_interface {
- #     network_interface_id = "${network_interface.vpn0_isp1_int}"
- #     device_index = 0
- # }
-#
-#  network_interface {
-#      network_interface_id = "${network_interface.vpn0_isp2_int}"
-#      device_index = 1
-#  }
-#
-#  network_interface {
-#      network_interface_id = "${network_interface.vpn512_int}"
-#      device_index = 1
-#
-# network_interface {
-#      network_interface_id = "${network_interface.vpn1_int}"
-#      device_index = 2
-#  }
-# }
+  network_interface {
+      network_interface_id = "${aws_network_interface.vpn0_isp1_int.id}"
+      device_index = 0
+  }
+
+  network_interface {
+      network_interface_id = "${aws_network_interface.vpn0_isp2_int.id}"
+      device_index = 1
+  }
+
+  network_interface {
+      network_interface_id = "${aws_network_interface.vpn512_int.id}"
+      device_index = 1
+  }
+
+  network_interface {
+      network_interface_id = "${aws_network_interface.vpn1_int.id}"
+      device_index = 2
+  }
 }
