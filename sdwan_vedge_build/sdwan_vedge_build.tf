@@ -4,9 +4,7 @@
 variable "private_key_path" {
     default = "$HOME/.ssh/"
 }
-variable "key_name" {
-    default = "hfy-macpro"
-}
+variable "key_name" {}
 variable "vpn_0_isp_1" {
     default = "10.1.0.0/24"
 }
