@@ -104,12 +104,12 @@ resource "aws_route_table_association" "rta-vpn0-isp2" {
 }
 
 resource "aws_route_table_association" "rta-vpn512" {
-    subnet_id = "${var.vpn_512}"
+    subnet_id = "${aws_subnet.vpn_512.id}"
     route_table_id = "${aws_route_table.rtb.id}"
 }
 
 resource "aws_route_table_association" "rta-vpn1" {
-    subnet_id = "${var.vpn_1}"
+    subnet_id = "${aws_subnet.vpn_1.id}"
     route_table_id = "${aws_route_table.rtb.id}"
   
 }
