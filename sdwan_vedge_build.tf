@@ -27,7 +27,6 @@ variable "vpc_cidr_block" {
 variable "aws_vpc_id" {
     default = "sdwan_lab_aws"
 }
-# variable "aws_vpc.vpc.id"
 
 ################# provider ############################################
 provider "aws" {
@@ -38,13 +37,11 @@ provider "aws" {
 }
 
 ################# data ############################################
-
 data "aws_availability_zones" "available" {}
 
 variable "avail_zone_name" {
   default = "${data.aws_availability_zones.available.names[0]}"
 }
-
 
 ################# resource ############################################
 resource "aws_vpc" "sdwan_lab" {
@@ -99,6 +96,7 @@ resource "aws_route_table" "rtb" {
         Name = "${var.aws_vpc_id}-rtb"
     }
 }
+
 ##### routing #####
 resource "aws_route_table_association" "rta-vpn0-isp1" {
     subnet_id = "${aws_subnet.vpn_0_isp_1}"
@@ -154,7 +152,6 @@ resource "aws_security_group" "sdwan-cisco-ips-sg" {
         Name = "${var.aws_vpc}-sg"
     }
 }
-
 ##### interfaces #####
 
 resource "network_interface" "vpn0_isp1_int" {
@@ -200,8 +197,8 @@ resource "aws_instance" "vEdge" {
  #   inline = [
  #       "enter scriopt or commands here"
  #   ]
+ #  }
  # }
-}
 
   network_interface {
       network_interface_id = "${network_interface.vpn0_isp1_int}"
@@ -221,79 +218,4 @@ resource "aws_instance" "vEdge" {
       network_interface_id = "${network_interface.vpn1_int}"
       device_index = 2
   }
-
-resource "aws_instance" "vBond" {
-    ami           = "ami-0fb321d472a665c9b"
-    instance_type = "t2.medium"
-    key_name = "${var.key_name}"
-    vpc_id = "${aws_vpc.vpc.id}"
-    vpc_security_group_ids = ["${aws_security_group.sdwan-cisco-ips-sg.id}"]
-
-  connection {
-    user        = "admin"
-    private_key = "${file(var.private_key_path)}"
-  }
-
- # provisioner "remote-exec" {
- #   inline = [
- #       "enter scriopt or commands here"
- #   ]
- # }
-}
-
-resource "aws_instance" "vSmart" {
-    ami           = "ami-009199ca9072fff9b"
-    instance_type = "t2.medium"
-    key_name = "${var.key_name}" # key that you're going to use to ssh into the instance using that keypair
-    vpc_id = "${aws_vpc.vpc.id}"
-    vpc_security_group_ids = ["${aws_security_group.sdwan-cisco-ips-sg.id}"]
-
-  connection {
-    user        = "admin"
-    private_key = "${file(var.private_key_path)}"
-  }
-
- # provisioner "remote-exec" {
- #   inline = [
- #       "enter scriopt or commands here"
- #   ]
- # }
-}
-
-resource "aws_instance" "vManage" {
-    ami           = "ami-0bec2a918cc4d417b"
-    instance_type = "t2.xlarge"
-    key_name = "${var.key_name}" # key that you're going to use to ssh into the instance using that keypair
-    vpc_id = "${aws_vpc.vpc.id}"
-    vpc_security_group_ids = ["${aws_security_group.sdwan-cisco-ips-sg.id}"]
-
-  connection {
-    user        = "admin"
-    private_key = "${file(var.private_key_path)}"
-  }
-
-resource "aws_instance" "Linux_host_vpn1" {
-    ami = "ami-00a1270ce1e007c27"
-    instance_type = "t2.medium"
-    key_name = "${var.key_name}" # key that you're going to use to ssh into the instance using that keypair
-    vpc_id = "${aws_vpc.vpc.id}"
-    vpc_security_group_ids = ["${aws_security_group.sdwan-cisco-ips-sg.id}"]
-
-    connection {
-      user        = "admin"
-      private_key = "${file(var.private_key_path)}"    
-   }
-
- # provisioner "remote-exec" {
- #   inline = [
- #       "enter scriopt or commands here"
- #   ]
- # }
-}
-
-################# output ############################################
-
-output "aws_public_ip" {
-    value = 
-    "${aws_instance.ex.public_dns}"
 }
