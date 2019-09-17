@@ -8,10 +8,10 @@ variable "key_name" {
     default = "hfy-macpro"
 }
 variable "vpn_0_isp_1" {
-    default = "10.1.0.0/16"
+    default = "10.1.0.0/24"
 }
 variable "vpn_0_isp_2" {
-    default = "10.1.1.0/16"
+    default = "10.1.1.0/24"
 }
 variable "vpn_512" {
     default = "10.1.2.0/24"
@@ -137,7 +137,7 @@ resource "aws_security_group" "sdwan-cisco-ips-sg" {
     ingress {
         from_port = 443
         to_port = 443
-        protocol = "https"
+        protocol = "tcp"
         cidr_blocks = ["173.36.0.0/14"]
     }
     egress {
