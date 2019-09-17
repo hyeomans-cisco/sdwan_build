@@ -200,22 +200,22 @@ resource "aws_instance" "vEdge" {
  #  }
  # }
 
-  network_interface {
-      network_interface_id = "${network_interface.vpn0_isp1_int}"
-      device_index = 0
-  }
-
-  network_interface {
-      network_interface_id = "${network_interface.vpn0_isp2_int}"
-      device_index = 1
-  }
-
-  network_interface {
-      network_interface_id = "${network_interface.vpn512_int}"
-      device_index = 1
-
-  network_interface {
-      network_interface_id = "${network_interface.vpn1_int}"
-      device_index = 2
-  }
-}
+ # network_interface {
+ #     network_interface_id = "${network_interface.vpn0_isp1_int}"
+ #     device_index = 0
+ # }
+#
+#  network_interface {
+#      network_interface_id = "${network_interface.vpn0_isp2_int}"
+#      device_index = 1
+#  }
+#
+#  network_interface {
+#      network_interface_id = "${network_interface.vpn512_int}"
+#      device_index = 1
+#
+# network_interface {
+#      network_interface_id = "${network_interface.vpn1_int}"
+#      device_index = 2
+#  }
+# }
