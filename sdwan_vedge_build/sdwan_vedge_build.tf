@@ -201,22 +201,22 @@ resource "aws_instance" "vEdge" {
  #  }
  # }
 
-  network_interface {
+    network_interface {
       network_interface_id = "${aws_network_interface.vpn0_isp1_int.id}"
       device_index = 0
   }
 
-  network_interface {
+    network_interface {
       network_interface_id = "${aws_network_interface.vpn0_isp2_int.id}"
       device_index = 1
   }
 
-  network_interface {
+    network_interface {
       network_interface_id = "${aws_network_interface.vpn512_int.id}"
       device_index = 1
   }
 
-  network_interface {
+    network_interface {
       network_interface_id = "${aws_network_interface.vpn1_int.id}"
       device_index = 2
   }
