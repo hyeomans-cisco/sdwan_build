@@ -39,9 +39,6 @@ provider "aws" {
 ################# data ############################################
 data "aws_availability_zones" "available" {}
 
-variable "avail_zone_name" {
-  default = "${data.aws_availability_zones.available.names[0]}"
-}
 
 ################# resource ############################################
 resource "aws_vpc" "sdwan_lab" {
@@ -63,25 +60,25 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_subnet" "vpn_0_isp_1" {
     cidr_block = "${var.vpn_0_isp_1}"
     vpc_id = "${aws_vpc.vpc.id}"
-    availability_zone = "${var.avail_zone_name}"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "vpn_0_isp_2" {
     cidr_block = "${var.vpn_0_isp_2}"
     vpc_id = "${aws_vpc.vpc.id}"
-    availability_zone = "${var.avail_zone_name}"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "vpn_512" {
     cidr_block = "${var.vpn_512}"
     vpc_id = "${aws_vpc.vpc.id}"
-    availability_zone = "${var.avail_zone_name}"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "vpn_1" {
     cidr_block = "${ var.vpn_1}"
     vpc_id = "${aws_vpc.vpc.id}"
-    availability_zone = "${var.avail_zone_name}"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_route_table" "rtb" {
