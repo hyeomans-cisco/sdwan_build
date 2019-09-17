@@ -183,7 +183,7 @@ resource "aws_network_interface" "vpn1_int" {
 }
 resource "aws_instance" "vEdge" {
     ami           = "ami-05049a983484d9ab3"
-    instance_type = "t2.xlarge"
+    instance_type = "m4.xlarge"
     key_name = "${var.key_name}" 
 
     connection {
