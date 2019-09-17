@@ -187,7 +187,6 @@ resource "aws_instance" "vEdge" {
     ami           = "ami-05049a983484d9ab3"
     instance_type = "c5.xlarge"
     key_name = "${var.key_name}" 
-    vpc_security_group_ids = ["${aws_security_group.sdwan-cisco-ips-sg.id}"]
 
     connection {
       user        = "admin"
