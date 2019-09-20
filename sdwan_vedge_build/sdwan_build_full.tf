@@ -21,7 +21,7 @@ variable "vpn_1" {
 }
 
 variable "vpn_sen" {
-    default = "10.1.3.0/24"
+    default = "10.1.4.0/24"
 }
 
 variable "vpc_cidr_block" {
