@@ -291,7 +291,7 @@ resource "aws_network_interface" "vmanage_vpn512_int" {
 
 # vEdge01
 
-resource "aws_instance" "vEdge01" {
+resource "aws_instance" "vedge01" {
     ami           = "ami-05049a983484d9ab3"
     instance_type = "m4.xlarge"
     key_name = "${var.key_name}" 
@@ -329,7 +329,7 @@ resource "aws_instance" "vEdge01" {
   }
 }
 
-data "aws_network_interface" "by_filter" {
+data "aws_network_interface" "vedge01_vpn" {
     filter {
         name = "tag:Name"
         values = "vedge01_vpn512_interface"
@@ -338,7 +338,7 @@ data "aws_network_interface" "by_filter" {
 
 resource "aws_eip" "pub_sdwan" {
     vpc = true
-    instance = "${aws_instance.vEdge01.id}"
+    instance = "${aws_instance.vedge01.id}"
     associate_with_private_ip = "${aws_network_interface.vedge01_vpn512_int}"
     depends_on = ["aws_internet_gateway.igw"]
 
@@ -346,7 +346,7 @@ resource "aws_eip" "pub_sdwan" {
 
 # vEdge02
 
-resource "aws_instance" "vEdge02" {
+resource "aws_instance" "vedge02" {
     ami           = "ami-05049a983484d9ab3"
     instance_type = "m4.xlarge"
     key_name = "${var.key_name}" 
@@ -384,24 +384,24 @@ resource "aws_instance" "vEdge02" {
   }
 }
 
-data "aws_network_interface" "by_filter" {
+data "aws_network_interface" "vedge02_vpn_512" {
     filter {
         name = "tag:Name"
-        values = "vedge01_vpn512_interface"
+        values = "vedge02_vpn512_interface"
     }
 }
 
 resource "aws_eip" "pub_sdwan" {
     vpc = true
-    instance = "${aws_instance.vEdge01.id}"
-    associate_with_private_ip = "${aws_network_interface.vedge01_vpn512_int}"
+    instance = "${aws_instance.vedge02.id}"
+    associate_with_private_ip = "${aws_network_interface.vedge02_vpn512_int}"
     depends_on = ["aws_internet_gateway.igw"]
 
 }
 
 # vBond
 
-resource "aws_instance" "vEdge02" {
+resource "aws_instance" "vbond" {
     ami           = "ami-05049a983484d9ab3"
     instance_type = "m4.xlarge"
     key_name = "${var.key_name}" 
@@ -419,44 +419,34 @@ resource "aws_instance" "vEdge02" {
  # }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp1_int.id}"
+      network_interface_id = "${aws_network_interface.vbond_sen_int.id}"
       device_index = 0
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp2_int.id}"
+      network_interface_id = "${aws_network_interface.vbond_vpn512_int.id}"
       device_index = 1
-  }
-
-    network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn512_int.id}"
-      device_index = 2
-  }
-
-    network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn1_int.id}"
-      device_index = 3
   }
 }
 
-data "aws_network_interface" "by_filter" {
+data "aws_network_interface" "vbond_vpn512_int" {
     filter {
         name = "tag:Name"
-        values = "vedge01_vpn512_interface"
+        values = "vbond_vpn512_interface"
     }
 }
 
 resource "aws_eip" "pub_sdwan" {
     vpc = true
-    instance = "${aws_instance.vEdge01.id}"
-    associate_with_private_ip = "${aws_network_interface.vedge01_vpn512_int}"
+    instance = "${aws_instance.vbond.id}"
+    associate_with_private_ip = "${aws_network_interface.vbond_vpn512_int}"
     depends_on = ["aws_internet_gateway.igw"]
 
 }
 
 # vSmart
 
-resource "aws_instance" "vEdge02" {
+resource "aws_instance" "vsmart" {
     ami           = "ami-05049a983484d9ab3"
     instance_type = "m4.xlarge"
     key_name = "${var.key_name}" 
@@ -474,44 +464,34 @@ resource "aws_instance" "vEdge02" {
  # }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp1_int.id}"
+      network_interface_id = "${aws_network_interface.vsmart_sen_int.id}"
       device_index = 0
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp2_int.id}"
+      network_interface_id = "${aws_network_interface.vsmart_vpn512_int.id}"
       device_index = 1
-  }
-
-    network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn512_int.id}"
-      device_index = 2
-  }
-
-    network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn1_int.id}"
-      device_index = 3
   }
 }
 
-data "aws_network_interface" "by_filter" {
+data "aws_network_interface" "vmsart_vpn512_int" {
     filter {
         name = "tag:Name"
-        values = "vedge01_vpn512_interface"
+        values = "vsmart_vpn512_interface"
     }
 }
 
 resource "aws_eip" "pub_sdwan" {
     vpc = true
-    instance = "${aws_instance.vEdge01.id}"
-    associate_with_private_ip = "${aws_network_interface.vedge01_vpn512_int}"
+    instance = "${aws_instance.vsmart.id}"
+    associate_with_private_ip = "${aws_network_interface.vsmart_vpn512_int}"
     depends_on = ["aws_internet_gateway.igw"]
 
 }
 
 # vManage
 
-resource "aws_instance" "vEdge02" {
+resource "aws_instance" "vmanage" {
     ami           = "ami-05049a983484d9ab3"
     instance_type = "m4.xlarge"
     key_name = "${var.key_name}" 
@@ -529,37 +509,27 @@ resource "aws_instance" "vEdge02" {
  # }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp1_int.id}"
+      network_interface_id = "${aws_network_interface.vmanage_sen_int.id}"
       device_index = 0
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp2_int.id}"
+      network_interface_id = "${aws_network_interface.vmanage_vpn512_int.id}"
       device_index = 1
-  }
-
-    network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn512_int.id}"
-      device_index = 2
-  }
-
-    network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn1_int.id}"
-      device_index = 3
   }
 }
 
-data "aws_network_interface" "by_filter" {
+data "aws_network_interface" "vmanage_vpn512_int" {
     filter {
         name = "tag:Name"
-        values = "vedge01_vpn512_interface"
+        values = "vmanage_vpn512_interface"
     }
 }
 
 resource "aws_eip" "pub_sdwan" {
     vpc = true
-    instance = "${aws_instance.vEdge01.id}"
-    associate_with_private_ip = "${aws_network_interface.vedge01_vpn512_int}"
+    instance = "${aws_instance.vmanage.id}"
+    associate_with_private_ip = "${aws_network_interface.vmanage_vpn512_int}"
     depends_on = ["aws_internet_gateway.igw"]
 
 }
