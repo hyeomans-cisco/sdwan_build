@@ -4,7 +4,9 @@
 variable "private_key_path" {
     default = "$HOME/.ssh/"
 }
-variable "key_name" {}
+variable "key_name" {
+    default = "hfy-macpro"
+}
 variable "vpn_0_isp_1" {
     default = "10.1.0.0/24"
 }
@@ -217,4 +219,18 @@ resource "aws_instance" "vEdge" {
       network_interface_id = "${aws_network_interface.vpn1_int.id}"
       device_index = 3
   }
+}
+
+data "aws_network_interface" "by_filter" {
+    filter {
+        name = "tag:Name"
+        values = "vpn512_interface"
+    }
+}
+resource "aws_eip" "pub_sdwan" {
+    vpc = true
+    instance = "${aws_instance.vEdge.id}"
+    associate_with_private_ip = "${aws_network_interface.vpn512_int}"
+    depends_on = ["aws_internet_gateway.igw"]
+
 }
