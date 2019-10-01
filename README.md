@@ -9,6 +9,9 @@ Qty 2 vEdge
 Qty 1 vBond
 Qty 1 vSmart
 
+All of the subnets, interfaces, routing, internet gateway and the assignment of a public IP for VPN512 is taken care of.
+Once this script completes you will be able to connect to the public IP address of each of these instances to complete the setup
+
 At this time a separate configuration will need to be applied as will the certificates and basic setup.
 
 Be aware that you will need to check and possibly change the following:
