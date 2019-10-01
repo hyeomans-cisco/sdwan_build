@@ -19,6 +19,11 @@ Be aware that you will need to check and possibly change the following:
    shared credentials line.
 4. key_name is the name of the private key you have created for accessing resources in AWS. At this time you'll have to create it
    ahead of time.
+5. There is a provisioner that runs for the vManage that will take several minutes to connect and may time out.  This provisioner is
+   an attempt to get past the intial boot where it asks to select the secondary disk, format it and reload.  Otherwise this will 
+   have to be done manually. 
+       To do manually ssh into the vManage and then select 1, then y (for yes) to format and let it reboot.
+
 
 
 Future additions will include provisioning that will call ansible to create all of the certificates from the vMAnage host as well as an
