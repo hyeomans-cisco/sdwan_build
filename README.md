@@ -1,2 +1,25 @@
 # sdwan_build
 SDWAN builds within AWS
+
+
+This terraform file takes AMIs which you will need to provide, and builds an SDWAN pod of the following:
+
+Qty 1 vManage
+Qty 2 vEdge 
+Qty 1 vBond
+Qty 1 vSmart
+
+At this time a separate configuration will need to be applied as will the certificates and basic setup.
+
+Be aware that you will need to check and possibly change the following:
+
+1. The AMI numbers which can be put into the AMI variables in the terraform script.
+2. The connection section under the aws instance assumes a private key file that is located in $HOME/.ssh and ends with .pem
+3. If you have a shared credentials file you can comment out the key and access variables noted in the script and uncomment out the
+   shared credentials line.
+4. key_name is the name of the private key you have created for accessing resources in AWS. At this time you'll have to create it
+   ahead of time.
+
+
+Future additions will include provisioning that will call ansible to create all of the certificates from the vMAnage host as well as an
+ansible playbook to Configured the service VPN 1, some basic templates, and basic configuration.

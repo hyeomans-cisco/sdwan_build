@@ -1,12 +1,14 @@
 ################# variables ############################################
-# variable "aws_access_key" {}
-# variable "aws_secret_key" {}
+###### Note: If you wish to use your credentials file in in your .aws config
+###### comment out the access and secret key variables below and comment out 
+###### the corresponding entries under the aws provider below
+variable "aws_access_key" {}
+variable "aws_secret_key" {}
+
 variable "private_key_path" {
     default = "$HOME/.ssh/"
 }
-variable "key_name" {
-    default = "hfy-macpro"
-}
+variable "key_name" {}
 variable "vpn_0_isp_1" {
     default = "10.1.0.0/24"
 }
@@ -20,7 +22,7 @@ variable "vpn_1" {
     default = "10.1.3.0/24"
 }
 
-variable "vpn_sen" {
+variable "sen_1" {
     default = "10.1.4.0/24"
 }
 
@@ -28,13 +30,30 @@ variable "vpc_cidr_block" {
     default = "10.1.0.0/16"
 }
 
+###### Define AMIs to use to build instances 
+###### Change to match the AMI information for your AWS account
+
+variable "vedge_vbond_ami" {
+    default = "ami-0fb321d472a665c9b"
+}
+
+variable "vsmart_ami" {
+    default = "ami-0bec2a918cc4d417b"
+}
+
+variable "vmanage_ami" {
+    default = "ami-009199ca9072fff9b"
+}
+###### Name VPC 
 variable "aws_vpc_id" {
     default = "sdwan_lab_aws"
 }
 
 ################# provider ############################################
 provider "aws" {
-    shared_credentials_file = "$HOME/.aws/credentials"
+     access_key = "${var.aws_access_key}"
+     secret_key = "${var.aws_secret_key}"
+ #   shared_credentials_file = "$HOME/.aws/credentials"
     region = "us-east-1"
 }
 
@@ -79,6 +98,7 @@ resource "aws_subnet" "subnet_vpn_512" {
     cidr_block = "${var.vpn_512}"
     vpc_id = "${aws_vpc.sdwan_lab.id}"
     availability_zone = "${data.aws_availability_zones.available.names[1]}"
+    map_public_ip_on_launch = "true"
 }
 
 resource "aws_subnet" "subnet_vpn_1" {
@@ -109,22 +129,28 @@ resource "aws_route_table" "rtb" {
 }
 
 resource "aws_route_table_association" "rta-vpn0-isp1" {
-    subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_0_isp_1.id}"
     route_table_id = "${aws_route_table.rtb.id}"
 }
 resource "aws_route_table_association" "rta-vpn0-isp2" {
-    subnet_id = "${aws_subnet.vpn_0_isp_2.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_0_isp_2.id}"
     route_table_id = "${aws_route_table.rtb.id}"
   
 }
 
 resource "aws_route_table_association" "rta-vpn512" {
-    subnet_id = "${aws_subnet.vpn_512.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_512.id}"
     route_table_id = "${aws_route_table.rtb.id}"
 }
 
 resource "aws_route_table_association" "rta-vpn1" {
-    subnet_id = "${aws_subnet.vpn_1.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_1.id}"
+    route_table_id = "${aws_route_table.rtb.id}"
+  
+}
+
+resource "aws_route_table_association" "rta-sen" {
+    subnet_id = "${aws_subnet.subnet_sen_1.id}"
     route_table_id = "${aws_route_table.rtb.id}"
   
 }
@@ -138,6 +164,13 @@ resource "aws_security_group" "sdwan-cisco-ips-sg" {
     ingress {
         from_port = 8443
         to_port = 8443
+        protocol = "tcp"
+        cidr_blocks = ["173.36.0.0/14"]
+    }
+
+       ingress {
+        from_port = 443
+        to_port = 443
         protocol = "tcp"
         cidr_blocks = ["173.36.0.0/14"]
     }
@@ -171,14 +204,16 @@ resource "aws_security_group" "sdwan-cisco-ips-sg" {
 # vEdge01
 
 resource "aws_network_interface" "vedge01_vpn0_isp1_int" {
-    subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_0_isp_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vedge01_vpn0_isp_1_interface"
     }
 }
 resource "aws_network_interface" "vedge01_vpn0_isp2_int" {
-    subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_0_isp_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vedge01_vpn0_isp_2_interface"
@@ -186,7 +221,8 @@ resource "aws_network_interface" "vedge01_vpn0_isp2_int" {
 }
 
 resource "aws_network_interface" "vedge01_vpn512_int" {
-    subnet_id = "${aws_subnet.vpn_512.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_512.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vedge01_vpn512_interface"
@@ -194,7 +230,8 @@ resource "aws_network_interface" "vedge01_vpn512_int" {
 }
 
 resource "aws_network_interface" "vedge01_vpn1_int" {
-    subnet_id = "${aws_subnet.vpn_1.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vedge01_vpn1_interface"
@@ -204,21 +241,24 @@ resource "aws_network_interface" "vedge01_vpn1_int" {
 # vEdge02
 
 resource "aws_network_interface" "vedge02_vpn0_isp1_int" {
-    subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_0_isp_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vedge02_vpn0_isp_1_interface"
     }
 }
 resource "aws_network_interface" "vedge02_vpn0_isp2_int" {
-    subnet_id = "${aws_subnet.vpn_0_isp_1.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_0_isp_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vedge02_vpn0_isp_2_interface"
     }
 }
 resource "aws_network_interface" "vedge02_vpn512_int" {
-    subnet_id = "${aws_subnet.vpn_512.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_512.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vedge02_vpn512_interface"
@@ -226,7 +266,8 @@ resource "aws_network_interface" "vedge02_vpn512_int" {
 }
 
 resource "aws_network_interface" "vedge02_vpn1_int" {
-    subnet_id = "${aws_subnet.vpn_1.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vedge02_vpn1_interface"
@@ -236,7 +277,8 @@ resource "aws_network_interface" "vedge02_vpn1_int" {
 # vBond
 
 resource "aws_network_interface" "vbond_sen_int" {
-    subnet_id = "${aws_subnet.vpn_sen.id}"
+    subnet_id = "${aws_subnet.subnet_sen_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vbond_sen_interface"
@@ -244,7 +286,8 @@ resource "aws_network_interface" "vbond_sen_int" {
 }
 
 resource "aws_network_interface" "vbond_vpn512_int" {
-    subnet_id = "${aws_subnet.vpn_512.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_512.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vbond_vpn512_interface"
@@ -254,7 +297,8 @@ resource "aws_network_interface" "vbond_vpn512_int" {
 #vSmart
 
 resource "aws_network_interface" "vsmart_sen_int" {
-    subnet_id = "${aws_subnet.vpn_sen.id}"
+    subnet_id = "${aws_subnet.subnet_sen_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vsmart_sen_interface"
@@ -262,7 +306,8 @@ resource "aws_network_interface" "vsmart_sen_int" {
 }
 
 resource "aws_network_interface" "vsmart_vpn512_int" {
-    subnet_id = "${aws_subnet.vpn_512.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_512.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vsmart_vpn512_interface"
@@ -271,8 +316,9 @@ resource "aws_network_interface" "vsmart_vpn512_int" {
 
 # vManage
 
-resource "aws_network_interface" "vmanage_vpn0_isp1_int" {
-    subnet_id = "${aws_subnet.vpn_sen.id}"
+resource "aws_network_interface" "vmanage_sen_int" {
+    subnet_id = "${aws_subnet.subnet_sen_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vmanage_sen_interface"
@@ -280,7 +326,8 @@ resource "aws_network_interface" "vmanage_vpn0_isp1_int" {
 }
 
 resource "aws_network_interface" "vmanage_vpn512_int" {
-    subnet_id = "${aws_subnet.vpn_512.id}"
+    subnet_id = "${aws_subnet.subnet_vpn_512.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
         Name = "vmanage_vpn512_interface"
@@ -292,9 +339,9 @@ resource "aws_network_interface" "vmanage_vpn512_int" {
 # vEdge01
 
 resource "aws_instance" "vedge01" {
-    ami           = "ami-05049a983484d9ab3"
+    ami           = "${var.vedge_vbond_ami}"
     instance_type = "m4.xlarge"
-    key_name = "${var.key_name}" 
+    key_name = "${var.key_name}"
 
     connection {
       user        = "admin"
@@ -303,23 +350,23 @@ resource "aws_instance" "vedge01" {
 
  # provisioner "remote-exec" {
  #   inline = [
- #       "enter scriopt or commands here"
+ #       "enter script or commands here"
  #   ]
  #  }
  # }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge01_vpn0_isp1_int.id}"
+      network_interface_id = "${aws_network_interface.vedge01_vpn512_int.id}"
       device_index = 0
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge01_vpn0_isp2_int.id}"
+      network_interface_id = "${aws_network_interface.vedge01_vpn0_isp1_int.id}"
       device_index = 1
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge01_vpn512_int.id}"
+      network_interface_id = "${aws_network_interface.vedge01_vpn0_isp2_int.id}"
       device_index = 2
   }
 
@@ -327,29 +374,33 @@ resource "aws_instance" "vedge01" {
       network_interface_id = "${aws_network_interface.vedge01_vpn1_int.id}"
       device_index = 3
   }
+  tags = {
+        Name = "vEdge01"
+    }
 }
 
 data "aws_network_interface" "vedge01_vpn" {
     filter {
         name = "tag:Name"
-        values = "vedge01_vpn512_interface"
+        values = ["vedge01_vpn512_interface"]
     }
+
+    depends_on = ["aws_network_interface.vedge01_vpn512_int"]
 }
 
-resource "aws_eip" "pub_sdwan" {
+ resource "aws_eip" "pub_sdwan_vedge01" {
     vpc = true
-    instance = "${aws_instance.vedge01.id}"
-    associate_with_private_ip = "${aws_network_interface.vedge01_vpn512_int}"
+    network_interface = "${aws_network_interface.vedge01_vpn512_int.id}"
     depends_on = ["aws_internet_gateway.igw"]
 
-}
+ }
 
 # vEdge02
 
 resource "aws_instance" "vedge02" {
-    ami           = "ami-05049a983484d9ab3"
+    ami           = "${var.vedge_vbond_ami}"
     instance_type = "m4.xlarge"
-    key_name = "${var.key_name}" 
+    key_name = "${var.key_name}"
 
     connection {
       user        = "admin"
@@ -364,17 +415,17 @@ resource "aws_instance" "vedge02" {
  # }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp1_int.id}"
+      network_interface_id = "${aws_network_interface.vedge02_vpn512_int.id}"
       device_index = 0
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp2_int.id}"
+      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp1_int.id}"
       device_index = 1
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vedge02_vpn512_int.id}"
+      network_interface_id = "${aws_network_interface.vedge02_vpn0_isp2_int.id}"
       device_index = 2
   }
 
@@ -382,28 +433,32 @@ resource "aws_instance" "vedge02" {
       network_interface_id = "${aws_network_interface.vedge02_vpn1_int.id}"
       device_index = 3
   }
+  tags = {
+        Name = "vEdge02"
+    }
 }
 
 data "aws_network_interface" "vedge02_vpn_512" {
     filter {
         name = "tag:Name"
-        values = "vedge02_vpn512_interface"
+        values = ["vedge02_vpn512_interface"]
     }
+        
+    depends_on = ["aws_network_interface.vedge02_vpn512_int"]
 }
 
-resource "aws_eip" "pub_sdwan" {
-    vpc = true
-    instance = "${aws_instance.vedge02.id}"
-    associate_with_private_ip = "${aws_network_interface.vedge02_vpn512_int}"
-    depends_on = ["aws_internet_gateway.igw"]
+resource "aws_eip" "pub_sdwan_vedge02" {
+   vpc = true
+   network_interface = "${aws_network_interface.vedge02_vpn512_int.id}"
+   depends_on = ["aws_internet_gateway.igw"]
 
 }
 
 # vBond
 
 resource "aws_instance" "vbond" {
-    ami           = "ami-05049a983484d9ab3"
-    instance_type = "m4.xlarge"
+    ami           = "${var.vedge_vbond_ami}"
+    instance_type = "t2.medium"
     key_name = "${var.key_name}" 
 
     connection {
@@ -419,36 +474,40 @@ resource "aws_instance" "vbond" {
  # }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vbond_sen_int.id}"
+      network_interface_id = "${aws_network_interface.vbond_vpn512_int.id}"
       device_index = 0
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vbond_vpn512_int.id}"
+      network_interface_id = "${aws_network_interface.vbond_sen_int.id}"
       device_index = 1
   }
+  tags = {
+        Name = "vBond01"
+    }
 }
 
 data "aws_network_interface" "vbond_vpn512_int" {
     filter {
         name = "tag:Name"
-        values = "vbond_vpn512_interface"
+        values = ["vbond_vpn512_interface"]
     }
+        
+    depends_on = ["aws_network_interface.vbond_vpn512_int"]
 }
 
-resource "aws_eip" "pub_sdwan" {
+ resource "aws_eip" "pub_sdwan_vbond" {
     vpc = true
-    instance = "${aws_instance.vbond.id}"
-    associate_with_private_ip = "${aws_network_interface.vbond_vpn512_int}"
+    network_interface = "${aws_network_interface.vbond_vpn512_int.id}"
     depends_on = ["aws_internet_gateway.igw"]
 
-}
+ }
 
 # vSmart
 
 resource "aws_instance" "vsmart" {
-    ami           = "ami-05049a983484d9ab3"
-    instance_type = "m4.xlarge"
+    ami           = "${var.vsmart_ami}"
+    instance_type = "t2.medium"
     key_name = "${var.key_name}" 
 
     connection {
@@ -464,72 +523,86 @@ resource "aws_instance" "vsmart" {
  # }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vsmart_sen_int.id}"
+      network_interface_id = "${aws_network_interface.vsmart_vpn512_int.id}"
       device_index = 0
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vsmart_vpn512_int.id}"
+      network_interface_id = "${aws_network_interface.vsmart_sen_int.id}"
       device_index = 1
   }
-}
 
-data "aws_network_interface" "vmsart_vpn512_int" {
-    filter {
-        name = "tag:Name"
-        values = "vsmart_vpn512_interface"
+  tags = {
+        Name = "vSmart"
     }
 }
 
-resource "aws_eip" "pub_sdwan" {
-    vpc = true
-    instance = "${aws_instance.vsmart.id}"
-    associate_with_private_ip = "${aws_network_interface.vsmart_vpn512_int}"
-    depends_on = ["aws_internet_gateway.igw"]
+data "aws_network_interface" "vsmart_vpn512_int" {
+    filter {
+        name = "tag:Name"
+        values = ["vsmart_vpn512_interface"]
+    }
+        
+    depends_on = ["aws_network_interface.vsmart_vpn512_int"]
+}
 
+resource "aws_eip" "pub_sdwan_vsmart" {
+    vpc = true
+    network_interface = "${aws_network_interface.vsmart_vpn512_int.id}"
+    depends_on = ["aws_internet_gateway.igw"]
+ 
 }
 
 # vManage
 
 resource "aws_instance" "vmanage" {
-    ami           = "ami-05049a983484d9ab3"
+    ami           = "${var.vmanage_ami}"
     instance_type = "m4.xlarge"
     key_name = "${var.key_name}" 
 
     connection {
+      type        = "ssh"
       user        = "admin"
-      private_key = "${file(var.private_key_path)}"
-  }
-
- # provisioner "remote-exec" {
- #   inline = [
- #       "enter scriopt or commands here"
- #   ]
- #  }
- # }
-
-    network_interface {
-      network_interface_id = "${aws_network_interface.vmanage_sen_int.id}"
-      device_index = 0
+      password    = "admin"
+      host        = "${aws_eip.pub_sdwan_vmanage.public_ip}"
+      private_key = "${file("~/.ssh/${var.key_name}.pem")}"
   }
 
     network_interface {
       network_interface_id = "${aws_network_interface.vmanage_vpn512_int.id}"
+      device_index = 0
+  }
+
+    network_interface {
+      network_interface_id = "${aws_network_interface.vmanage_sen_int.id}"
       device_index = 1
+  }
+
+  tags = {
+        Name = "vManage"
+    }
+
+  provisioner "remote-exec" {
+   inline = [
+       " ",
+       "1",
+       "y",
+   ]
   }
 }
 
 data "aws_network_interface" "vmanage_vpn512_int" {
     filter {
         name = "tag:Name"
-        values = "vmanage_vpn512_interface"
+        values = ["vmanage_vpn512_interface"]
     }
+        
+    depends_on = ["aws_network_interface.vmanage_vpn512_int"]
 }
 
-resource "aws_eip" "pub_sdwan" {
+resource "aws_eip" "pub_sdwan_vmanage" {
     vpc = true
-    instance = "${aws_instance.vmanage.id}"
-    associate_with_private_ip = "${aws_network_interface.vmanage_vpn512_int}"
+    network_interface = "${aws_network_interface.vmanage_vpn512_int.id}"
     depends_on = ["aws_internet_gateway.igw"]
 
 }
