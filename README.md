@@ -1,6 +1,8 @@
 # sdwan_build
 SDWAN builds within AWS
 
+Use terraform apply to build
+Use terraform destroy to remove everything from AWS
 
 This terraform file takes AMIs which you will need to provide, and builds an SDWAN pod of the following:
 
