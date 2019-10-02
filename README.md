@@ -1,8 +1,17 @@
 # sdwan_build by Hank Yeomans
 SDWAN builds within AWS
 
-Use terraform apply to build
-Use terraform destroy to remove everything from AWS
+
+What you will need:
+1.  Terraform installed - may need to run 'terraform init' in the directory you intend to run terraform to install the aws provider.
+2.  Either a shared credentials and config file setup in $HOME/.aws or access to your AWS keys for input.
+3.  AMIs for vEdge, vSmart, vBond, and vManage installed into your AWS account.  Will need to edit script with your AMI IDs.
+4.  A keypair defined in AWS and that file on your system to use when reaching your devices throught this script and afterwards.
+
+Instructions:
+
+Use "terraform apply" to build
+Use "terraform destroy" to remove everything you previously built from AWS
 
 This terraform file takes AMIs which you will need to provide, and builds an SDWAN pod of the following:
 
@@ -11,7 +20,7 @@ Qty 2 vEdge
 Qty 1 vBond
 Qty 1 vSmart
 
-All of the subnets, interfaces, routing, internet gateway and the assignment of a public IP for VPN512 is taken care of.
+All of the subnets, interfaces, routing, internet gateway and the assignment of a public IP for VPN512 are taken care of.
 Once this script completes you will be able to connect to the public IP address of each of these instances to complete the setup
 
 At this time a separate configuration will need to be applied as will the certificates and basic setup.
