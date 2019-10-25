@@ -465,7 +465,6 @@ resource "aws_instance" "jumphost01" {
 
 output "aws_public_ip" {
     value = "${aws_instance.jumphost01.public_dns}"
-    value = "${aws_instance.jumphost01.public_ip}"
 }
 
 # resource "aws_eip" "pub_jumphost01" {
