@@ -174,7 +174,7 @@ resource "aws_route_table" "rtb-public" {
     }
 
     tags = {
-        Name = "${var.aws_vpc_id}-rtb"
+        Name = "${var.aws_vpc_id}-rtb-pub"
     }
 }
 
@@ -414,6 +414,10 @@ resource "aws_instance" "ubuntuclient01" {
       private_key = "${file(var.private_key_path)}"
   }
 
+tags = {
+     Name = "ubuntuclient01"
+    }
+
  # provisioner "remote-exec" {
  #   inline = [
  #       "enter script or commands here"
@@ -433,6 +437,10 @@ resource "aws_instance" "ubuntuclient01" {
       user        = "ubuntu"
       private_key = "${file(var.private_key_path)}"
   }
+
+  tags = {
+        Name = "ubuntuclient02"
+    }
 
  # provisioner "remote-exec" {
  #   inline = [
@@ -454,7 +462,9 @@ resource "aws_instance" "jumphost01" {
       user        = "ubuntu"
       private_key = "${file(var.private_key_path)}"
   }
-
+  tags = {
+        Name = "jumphost01"
+    }
  # provisioner "remote-exec" {
  #   inline = [
  #       "enter script or commands here"
@@ -722,9 +732,9 @@ resource "aws_instance" "vmanage" {
 
   provisioner "remote-exec" {
    inline = [
-       " ",
-       "1",
-       "y",
+       "config t",
+       "exit",
+       "show run",
    ]
   }
 }
