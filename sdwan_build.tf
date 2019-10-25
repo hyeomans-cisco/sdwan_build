@@ -160,7 +160,7 @@ resource "aws_route_table" "rtb" {
 
     route {
         cidr_block = "0.0.0.0/0"
-        gateway_id = "${aws_nat_gateway.ngw.id}"
+        nat_gateway_id = "${aws_nat_gateway.ngw.id}"
     }
 
     tags = {
@@ -173,7 +173,7 @@ resource "aws_route_table" "rtb-public" {
 
     route {
         cidr_block = "0.0.0.0/0"
-        nat_gateway_id = "${aws_internet_gateway.ngw.id}"
+        gateway_id = "${aws_internet_gateway.igw.id}"
     }
 
     tags = {
@@ -484,7 +484,7 @@ output "aws_public_ip" {
 #   vpc = true
 #   instance = "${aws_instance.jumphost01}"
 #   depends_on = ["aws_internet_gateway.igw"]
-
+# 
 # }
 
 # vEdge01
@@ -748,7 +748,7 @@ data "aws_network_interface" "vmanage_vpn512_int" {
         values = ["vmanage_vpn512_interface"]
     }
         
-    depends_on = ["aws_network_interface.vmanage_vpn512_int"]
+    depends_on = ["aws_network_interface.vmanage_vpn512_public_int"]
 }
 
 resource "aws_eip" "pub_sdwan_vmanage" {
