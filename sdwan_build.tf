@@ -160,11 +160,6 @@ resource "aws_route_table" "rtb" {
         gateway_id = "${aws_nat_gateway.ngw.id}"
     }
 
-    route {
-        cidr_block = "108.20.197.119/32"
-        gateway_id = "${aws_internet_gateway.igw.id}"
-    }
-
     tags = {
         Name = "${var.aws_vpc_id}-rtb"
     }
