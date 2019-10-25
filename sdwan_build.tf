@@ -54,11 +54,13 @@ variable "ubuntu_endpoint_ami" {
 }
 
 ###### Name VPC 
+
 variable "aws_vpc_id" {
     default = "sdwan_lab_aws"
 }
 
 ################# provider ############################################
+
 provider "aws" {
      access_key = "${var.aws_access_key}"
      secret_key = "${var.aws_secret_key}"
@@ -67,6 +69,7 @@ provider "aws" {
 }
 
 ################# data ############################################
+
 data "aws_availability_zones" "available" {}
 
 
