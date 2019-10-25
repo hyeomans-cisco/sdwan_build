@@ -30,6 +30,10 @@ variable "vpc_cidr_block" {
     default = "10.1.0.0/16"
 }
 
+variable "nat_public_block" {
+    default = "10.1.5.0/24"
+}
+
 ###### Define AMIs to use to build instances 
 ###### Change to match the AMI information for your AWS account
 
@@ -44,6 +48,11 @@ variable "vsmart_ami" {
 variable "vmanage_ami" {
     default = "ami-009199ca9072fff9b"
 }
+
+variable "ubuntu_endpoint_ami" {
+    default = "ami-0d5d9d301c853a04a"
+}
+
 ###### Name VPC 
 variable "aws_vpc_id" {
     default = "sdwan_lab_aws"
@@ -61,7 +70,8 @@ provider "aws" {
 data "aws_availability_zones" "available" {}
 
 
-################# resource ############################################
+################# vpc ############################################
+
 resource "aws_vpc" "sdwan_lab" {
     cidr_block = "${var.vpc_cidr_block}"
     enable_dns_hostnames = "true"
@@ -69,6 +79,12 @@ resource "aws_vpc" "sdwan_lab" {
     tags = {
         Name = "${var.aws_vpc_id}-vpc"
     }
+}
+
+resource "aws_eip" "nat" {
+    vpc = true
+    depends_on = ["aws_internet_gateway.igw"]
+
 }
 
 ##### internet gateway #####
@@ -80,6 +96,7 @@ resource "aws_internet_gateway" "igw" {
         Name = "${var.aws_vpc_id}-igw"
     }
 }
+
 
 ##### subnets #####
 resource "aws_subnet" "subnet_vpn_0_isp_1" {
@@ -113,6 +130,26 @@ resource "aws_subnet" "subnet_sen_1" {
     availability_zone = "${data.aws_availability_zones.available.names[1]}"
 }
 
+resource "aws_subnet" "nat_public" {
+    cidr_block = "${ var.nat_public_block}"
+    vpc_id = "${aws_vpc.sdwan_lab.id}"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
+}
+
+
+##### nat gateway #####
+
+
+resource "aws_nat_gateway" "ngw" {
+    allocation_id = "${aws_eip.nat.id}"
+    subnet_id = "${aws_subnet.nat_public.id}"
+    depends_on = ["aws_internet_gateway.igw"]
+
+    tags = {
+        Name = "${var.aws_vpc_id}-igw"
+    }
+}
+
 ##### routing #####
 
 resource "aws_route_table" "rtb" {
@@ -128,10 +165,29 @@ resource "aws_route_table" "rtb" {
     }
 }
 
+resource "aws_route_table" "rtb-public" {
+    vpc_id = "${aws_vpc.sdwan_lab.id}"
+
+    route {
+        cidr_block = "0.0.0.0/0"
+        nat_gateway_id = "${aws_nat_gateway.ngw.id}"
+    }
+
+    tags = {
+        Name = "${var.aws_vpc_id}-rtb"
+    }
+}
+
+resource "aws_route_table_association" "rta-nat-public" {
+    subnet_id = "${aws_subnet.nat_public.id}"
+    route_table_id = "${aws_route_table.rtb-public.id}"
+}
+
 resource "aws_route_table_association" "rta-vpn0-isp1" {
     subnet_id = "${aws_subnet.subnet_vpn_0_isp_1.id}"
     route_table_id = "${aws_route_table.rtb.id}"
 }
+
 resource "aws_route_table_association" "rta-vpn0-isp2" {
     subnet_id = "${aws_subnet.subnet_vpn_0_isp_2.id}"
     route_table_id = "${aws_route_table.rtb.id}"
@@ -195,7 +251,7 @@ resource "aws_security_group" "sdwan-cisco-ips-sg" {
         protocol = "-1"
         cidr_blocks = ["${var.vpc_cidr_block}"]
     }
-    
+
     egress {
         from_port = 0
         to_port = 0
@@ -344,6 +400,81 @@ resource "aws_network_interface" "vmanage_vpn512_int" {
 
 ##### ec2 instances #####
 
+# Ubuntu end-point hosts
+
+resource "aws_instance" "ubuntuclient01" {
+    ami           = "${var.ubuntu_endpoint_ami}"
+    instance_type = "t2.micro"
+    key_name = "${var.key_name}"
+    subnet_id = "${aws_subnet.subnet_vpn_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
+
+    connection {
+      user        = "ubuntu"
+      private_key = "${file(var.private_key_path)}"
+  }
+
+ # provisioner "remote-exec" {
+ #   inline = [
+ #       "enter script or commands here"
+ #   ]
+ #  }
+ # }
+}
+
+ resource "aws_instance" "ubuntuclient02" {
+    ami           = "${var.ubuntu_endpoint_ami}"
+    instance_type = "t2.micro"
+    key_name = "${var.key_name}"
+    subnet_id = "${aws_subnet.subnet_vpn_1.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
+
+    connection {
+      user        = "ubuntu"
+      private_key = "${file(var.private_key_path)}"
+  }
+
+ # provisioner "remote-exec" {
+ #   inline = [
+ #       "enter script or commands here"
+ #   ]
+ #  }
+ # }
+ }
+
+resource "aws_instance" "jumphost01" {
+    ami           = "${var.ubuntu_endpoint_ami}"
+    instance_type = "t2.micro"
+    key_name = "${var.key_name}"
+    subnet_id = "${aws_subnet.nat_public.id}"
+    security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
+    associate_public_ip_address = true
+
+    connection {
+      user        = "ubuntu"
+      private_key = "${file(var.private_key_path)}"
+  }
+
+ # provisioner "remote-exec" {
+ #   inline = [
+ #       "enter script or commands here"
+ #   ]
+ #  }
+ # }
+}
+
+output "aws_public_ip" {
+    value = "${aws_instance.jumphost01.public_dns}"
+    value = "${aws_instance.jumphost01.public_ip}"
+}
+
+# resource "aws_eip" "pub_jumphost01" {
+#   vpc = true
+#   instance = "${aws_instance.jumphost01}"
+#   depends_on = ["aws_internet_gateway.igw"]
+
+# }
+
 # vEdge01
 
 resource "aws_instance" "vedge01" {
@@ -396,12 +527,12 @@ data "aws_network_interface" "vedge01_vpn" {
     depends_on = ["aws_network_interface.vedge01_vpn512_int"]
 }
 
- resource "aws_eip" "pub_sdwan_vedge01" {
-    vpc = true
-    network_interface = "${aws_network_interface.vedge01_vpn512_int.id}"
-    depends_on = ["aws_internet_gateway.igw"]
-
- }
+#  resource "aws_eip" "pub_sdwan_vedge01" {
+#     vpc = true
+#     network_interface = "${aws_network_interface.vedge01_vpn512_int.id}"
+#     depends_on = ["aws_internet_gateway.igw"]
+# 
+#  }
 
 # vEdge02
 
@@ -455,12 +586,12 @@ data "aws_network_interface" "vedge02_vpn_512" {
     depends_on = ["aws_network_interface.vedge02_vpn512_int"]
 }
 
-resource "aws_eip" "pub_sdwan_vedge02" {
-   vpc = true
-   network_interface = "${aws_network_interface.vedge02_vpn512_int.id}"
-   depends_on = ["aws_internet_gateway.igw"]
-
-}
+# resource "aws_eip" "pub_sdwan_vedge02" {
+#    vpc = true
+#    network_interface = "${aws_network_interface.vedge02_vpn512_int.id}"
+#    depends_on = ["aws_internet_gateway.igw"]
+# 
+# }
 
 # vBond
 
@@ -504,12 +635,12 @@ data "aws_network_interface" "vbond_vpn512_int" {
     depends_on = ["aws_network_interface.vbond_vpn512_int"]
 }
 
- resource "aws_eip" "pub_sdwan_vbond" {
-    vpc = true
-    network_interface = "${aws_network_interface.vbond_vpn512_int.id}"
-    depends_on = ["aws_internet_gateway.igw"]
-
- }
+ # resource "aws_eip" "pub_sdwan_vbond" {
+ #   vpc = true
+ #   network_interface = "${aws_network_interface.vbond_vpn512_int.id}"
+ #   depends_on = ["aws_internet_gateway.igw"]
+ #
+ # }
 
 # vSmart
 
@@ -554,12 +685,12 @@ data "aws_network_interface" "vsmart_vpn512_int" {
     depends_on = ["aws_network_interface.vsmart_vpn512_int"]
 }
 
-resource "aws_eip" "pub_sdwan_vsmart" {
-    vpc = true
-    network_interface = "${aws_network_interface.vsmart_vpn512_int.id}"
-    depends_on = ["aws_internet_gateway.igw"]
+# resource "aws_eip" "pub_sdwan_vsmart" {
+#    vpc = true
+#    network_interface = "${aws_network_interface.vsmart_vpn512_int.id}"
+#    depends_on = ["aws_internet_gateway.igw"]
  
-}
+# }
 
 # vManage
 
