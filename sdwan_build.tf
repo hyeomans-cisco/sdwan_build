@@ -99,6 +99,7 @@ resource "aws_internet_gateway" "igw" {
 
 
 ##### subnets #####
+
 resource "aws_subnet" "subnet_vpn_0_isp_1" {
     cidr_block = "${var.vpn_0_isp_1}"
     vpc_id = "${aws_vpc.sdwan_lab.id}"
@@ -139,7 +140,6 @@ resource "aws_subnet" "nat_public" {
 
 ##### nat gateway #####
 
-
 resource "aws_nat_gateway" "ngw" {
     allocation_id = "${aws_eip.nat.id}"
     subnet_id = "${aws_subnet.nat_public.id}"
@@ -157,6 +157,11 @@ resource "aws_route_table" "rtb" {
 
     route {
         cidr_block = "0.0.0.0/0"
+        gateway_id = "${aws_nat_gateway.ngw.id}"
+    }
+
+    route {
+        cidr_block = "108.20.197.119/32"
         gateway_id = "${aws_internet_gateway.igw.id}"
     }
 
@@ -170,7 +175,7 @@ resource "aws_route_table" "rtb-public" {
 
     route {
         cidr_block = "0.0.0.0/0"
-        nat_gateway_id = "${aws_nat_gateway.ngw.id}"
+        nat_gateway_id = "${aws_internet_gateway.ngw.id}"
     }
 
     tags = {
@@ -389,8 +394,8 @@ resource "aws_network_interface" "vmanage_sen_int" {
     }
 }
 
-resource "aws_network_interface" "vmanage_vpn512_int" {
-    subnet_id = "${aws_subnet.subnet_vpn_512.id}"
+resource "aws_network_interface" "vmanage_vpn512_public_int" {
+    subnet_id = "${aws_subnet.nat_public.id}"
     security_groups = [ "${aws_security_group.sdwan-cisco-ips-sg.id}" ]
 
     tags = {
@@ -707,7 +712,7 @@ resource "aws_instance" "vmanage" {
   }
 
     network_interface {
-      network_interface_id = "${aws_network_interface.vmanage_vpn512_int.id}"
+      network_interface_id = "${aws_network_interface.vmanage_vpn512_public_int.id}"
       device_index = 0
   }
 
@@ -740,7 +745,7 @@ data "aws_network_interface" "vmanage_vpn512_int" {
 
 resource "aws_eip" "pub_sdwan_vmanage" {
     vpc = true
-    network_interface = "${aws_network_interface.vmanage_vpn512_int.id}"
+    network_interface = "${aws_network_interface.vmanage_vpn512_public_int.id}"
     depends_on = ["aws_internet_gateway.igw"]
 
 }
